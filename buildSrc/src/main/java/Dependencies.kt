@@ -24,6 +24,7 @@ private object Versions {
     const val jna = "4.5.2"
 
     const val fxa = "0.2.3"
+    const val sync_logins = "0.1.0"
 }
 
 // Synchronized dependencies used by (some) modules
@@ -56,6 +57,8 @@ object Deps {
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
     const val mozilla_fxa = "mozilla:fxa_client_android:${Versions.fxa}@zip"
+    // TODO: this will change, depending on group / artifact id
+    const val mozilla_sync_logins = "mozilla:sync_logins:${Versions.sync_logins}@aar"
 
     const val jna = "net.java.dev.jna:jna:${Versions.jna}@aar"
     const val jnaForTest = "net.java.dev.jna:jna:${Versions.jna}@jar"
