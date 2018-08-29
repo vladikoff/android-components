@@ -14,7 +14,7 @@ import org.mozilla.sync15.logins.SyncResult
 class SyncLoginsTest {
 
     @Test
-    fun syncLoginsTest() {
+    fun syncLogins() {
         SyncResult.fromValue(42)
     }
 }

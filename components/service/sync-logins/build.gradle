@@ -29,12 +29,22 @@ android {
 
 repositories {
     // https://s3-us-west-2.amazonaws.com/fxa-dev-bucket/project.sync-logins.builds.0.1.0/artifacts/public/bin/mozilla/sync_logins_0.1.0.aar
+    // https://dl.bintray.com/vladikoff/FxAClientAndroid/
+//    ivy {
+//        url 'https://s3-us-west-2.amazonaws.com/fxa-dev-bucket/'
+//        layout 'pattern', {
+//            artifact '/project.sync-logins.builds.[revision]/artifacts/public/bin/[organisation]/[module]_[revision].[ext]'
+//        }
+//    }
     ivy {
-        url 'https://s3-us-west-2.amazonaws.com/fxa-dev-bucket/'
+        url 'https://dl.bintray.com/vladikoff/FxAClientAndroid/'
         layout 'pattern', {
-            artifact '/project.sync-logins.builds.[revision]/artifacts/public/bin/[organisation]/[module]_[revision].[ext]'
+            artifact '/[module]_[revision].[ext]'
         }
     }
+//        maven {
+//            url  "https://dl.bintray.com/vladikoff/FxAClientAndroid"
+//        }
 }
 
 configurations {
@@ -67,7 +77,7 @@ dependencies {
 
     testImplementation files(configurations.jnaForTest.files)
 
-    //testImplementation Deps.mozilla_sync_logins
+    testImplementation Deps.mozilla_sync_logins
 
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric
