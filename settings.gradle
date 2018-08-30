@@ -147,5 +147,8 @@ project(':samples-browser').projectDir = new File(rootDir, 'samples/browser')
 include ':samples-firefox-accounts'
 project(':samples-firefox-accounts').projectDir = new File(rootDir, 'samples/firefox-accounts')
 
+include ':samples-sync-logins'
+project(':samples-sync-logins').projectDir = new File(rootDir, 'samples/sync-logins')
+
 include ':samples-toolbar'
 project(':samples-toolbar').projectDir = new File(rootDir, 'samples/toolbar')
