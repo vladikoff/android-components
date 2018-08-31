@@ -28,7 +28,8 @@ class MinimalLoginsExample(private val databasePath: String) {
      */
     fun syncAndGetPasswords(oauthInfo: OAuthInfo, tokenServerURL: String): SyncResult<List<ServerPassword>> {
         return this.getUnlockedStore().then { store ->
-            store.sync(this.getUnlockInfo(oauthInfo, tokenServerURL))
+            val unlockInfo = this.getUnlockInfo(oauthInfo, tokenServerURL)
+            store.sync(unlockInfo)
         }.then {
             this.getLocalPasswordList()
         }

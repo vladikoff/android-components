@@ -13,20 +13,18 @@ import android.view.View
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.annotation.RequiresApi
 import android.support.v4.content.ContextCompat
 import android.util.Log
-import android.widget.CheckBox
-import android.widget.TextView
+import android.widget.*
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaResult
 import mozilla.components.service.fxa.OAuthInfo
 import mozilla.components.service.fxa.Profile
-import org.mozilla.sync15.logins.ServerPassword
 import org.mozilla.sync15.logins.SyncResult
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.util.*
 
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener {
 
@@ -34,10 +32,17 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private var scopes: Array<String> = arrayOf("profile https://identity.mozilla.com/apps/oldsync")
     private var wantsKeys: Boolean = true
 
+    private lateinit var listView: ListView
+    private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var activityContext: MainActivity
+
     companion object {
-        const val CLIENT_ID = "12cc4070a481bc73"
-        const val REDIRECT_URL = "fxaclient://android.redirect"
-        const val CONFIG_URL = "https://latest.dev.lcip.org"
+        //const val CLIENT_ID = "12cc4070a481bc73"
+        const val CLIENT_ID = "98adfa37698f255b"
+        //const val REDIRECT_URL = "fxaclient://android.redirect"
+        const val REDIRECT_URL = "https://lockbox.firefox.com/fxa/ios-redirect.html"
+        //const val CONFIG_URL = "https://latest.dev.lcip.org"
+        const val CONFIG_URL = "https://accounts.firefox.com"
         const val FXA_STATE_PREFS_KEY = "fxaAppState"
         const val FXA_STATE_KEY = "fxaState"
     }
@@ -45,6 +50,11 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        listView = findViewById<ListView>(R.id.logins_list_view)
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1)
+        listView.adapter = adapter
+        activityContext = this;
 
         getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "").let {
             FirefoxAccount.fromJSONString(it).then({
@@ -58,7 +68,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             }).whenComplete {
                 val txtView: TextView = findViewById(R.id.txtView)
                 runOnUiThread {
-                    txtView.text = getString(R.string.signed_in, "${it.displayName ?: ""} ${it.email}")
+                    txtView.text = getString(R.string.signed_in, "${it.displayName
+                            ?: ""} ${it.email}")
                 }
             }
         }
@@ -73,9 +84,6 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             txtView.text = getString(R.string.logged_out)
         }
 
-        findViewById<CheckBox>(R.id.checkboxKeys).setOnCheckedChangeListener { _, isChecked ->
-            wantsKeys = isChecked
-        }
     }
 
     override fun onDestroy() {
@@ -109,7 +117,6 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         supportFragmentManager?.popBackStack()
     }
 
-
     fun dumpError(tag: String, e: Exception) {
         val sw = StringWriter();
         val pw = PrintWriter(sw);
@@ -122,43 +129,42 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     private fun displayAndPersistProfile(code: String, state: String) {
-        val txtView: TextView = findViewById(R.id.txtView)
         val handleAuth = { oauthInfo: OAuthInfo ->
-//
+            val permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
-        val permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
-            Log.d("LoginsSampleApp", "Got write Permission!");
-        } else {
-            Log.d("LoginsSampleApp", "No write Permission!");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
-            };
-        }
-        val appFiles = this.applicationContext.getExternalFilesDir(null)
-        val dbPath = appFiles.absolutePath + "/logins.mentatdb"
-        Log.i("Setting DB Path", dbPath)
-        val logins = MinimalLoginsExample(dbPath)
-        val tokenServer = account!!.getTokenServerEndpointURL()!!
-        Log.i("tokenServer", tokenServer)
-        logins.syncAndGetPasswords(oauthInfo, tokenServer).whenComplete { logins ->
-            Log.i("Logins", "Start")
-        }
-
-        account?.getProfile()
-
-        }
-        val handleProfile = { value: Profile ->
-            runOnUiThread {
-                txtView.text = getString(R.string.signed_in, "${value.displayName ?: ""} ${value.email}")
+            if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                Log.d("LoginsSampleApp", "Got write Permission!")
+            } else {
+                Log.d("LoginsSampleApp", "No write Permission!")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+                }
             }
-            account?.toJSONString().let {
-                getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit().putString(FXA_STATE_KEY, it).apply()
+
+            val appFiles = this.applicationContext.getExternalFilesDir(null)
+            val dbPath = appFiles.absolutePath + "/logins.mentatdb"
+            Log.i("Setting DB Path", dbPath)
+            val logins = MinimalLoginsExample(dbPath)
+            val tokenServer = account!!.getTokenServerEndpointURL()!!
+            Log.i("tokenServer", tokenServer)
+            logins.syncAndGetPasswords(oauthInfo, tokenServer).thenCatch { err ->
+                Log.i("Logins fail", "Start")
+                SyncResult.fromException(err)
+            }.whenComplete { logins ->
+                runOnUiThread {
+                    Toast.makeText(this, "Logins success", Toast.LENGTH_SHORT).show()
+                    for (i in 0..logins.size - 1) {
+                        adapter.addAll("L:" + logins[i].hostname);
+                        adapter.notifyDataSetChanged();
+                    }
+
+                    Log.i("Logins", "End");
+                }
             }
+
+            FxaResult.fromValue(true)
         }
 
-        account?.completeOAuthFlow(code, state)?.then(handleAuth)?.whenComplete(handleProfile)
+        account?.completeOAuthFlow(code, state)?.then(handleAuth)
     }
 }

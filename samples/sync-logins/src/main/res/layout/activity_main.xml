@@ -11,6 +11,7 @@
     android:id="@+id/container"
     tools:context="org.mozilla.samples.sync.logins.MainActivity">
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,12 +21,11 @@
         android:id="@+id/buttonList"
         tools:context="org.mozilla.samples.sync.logins.MainActivity">
 
-        <Button
-            android:id="@+id/buttonCustomTabs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/sign_in_customtabs" />
-
+        <ListView
+            android:id="@+id/logins_list_view"
+            android:layout_width="fill_parent"
+            android:layout_height="150dp"
+            />
         <Button
             android:id="@+id/buttonWebView"
             android:layout_width="wrap_content"
@@ -37,20 +37,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/log_out" />
+
+
     </LinearLayout>
 
-    <CheckBox
-        android:id="@+id/checkboxKeys"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonList"
-        android:text="@string/wants_keys" />
 
     <TextView
         android:id="@+id/txtView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/checkboxKeys"
         android:layout_gravity="center"
         android:text="@string/log_out" />
 

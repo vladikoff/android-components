@@ -16,11 +16,13 @@ import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.ListView
 
 class LoginFragment : Fragment() {
 
     private lateinit var authUrl: String
     private lateinit var redirectUrl: String
+
     private var mWebView: WebView? = null
     private var listener: OnLoginCompleteListener? = null
 
