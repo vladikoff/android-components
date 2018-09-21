@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.customtabs.CustomTabsIntent
 import android.view.View
 import android.content.Intent
+import android.util.Log
 import android.widget.CheckBox
 import android.widget.TextView
 import mozilla.components.service.fxa.Config
@@ -28,7 +29,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     companion object {
         const val CLIENT_ID = "12cc4070a481bc73"
         const val REDIRECT_URL = "fxaclient://android.redirect"
-        const val CONFIG_URL = "https://latest.dev.lcip.org"
+        const val CONFIG_URL = "https://pairsona.dev.lcip.org"
         const val FXA_STATE_PREFS_KEY = "fxaAppState"
         const val FXA_STATE_KEY = "fxaState"
     }
@@ -45,6 +46,21 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 Config.custom(CONFIG_URL).then { value: Config ->
                     val acct = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
                     account = acct
+
+                    var qrresult = "https://accounts.firefox.com/pair#channel_id=658db7fe98b249a5897b884f98fb31b7&channel_key=1hIDzTj5oY2HDeSg_jA2DhcOcAn5Uqq0cAYlZRNUIo4"
+                    try {
+                        qrresult = getIntent().getExtras().getString("qrresult")
+                    } catch (e: Exception) {
+                        Log.i("e", "fail")
+                    }
+
+                    if (qrresult != "") {
+                        val pairingUrl = qrresult;
+                        account?.beginPairingFlow(pairingUrl, scopes)?.whenComplete {
+                            openWebView(it)
+                        }
+                    }
+
                     acct.getProfile()
                 }
             }).whenComplete {
@@ -63,6 +79,11 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             account?.beginOAuthFlow(scopes, wantsKeys)?.whenComplete { openWebView(it) }
         }
 
+        findViewById<View>(R.id.buttonPair).setOnClickListener {
+            val intent = Intent(this@MainActivity, ScanActivity::class.java)
+            startActivity(intent)
+        }
+
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
             getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit().putString(FXA_STATE_KEY, "").apply()
             val txtView: TextView = findViewById(R.id.txtView)
@@ -72,12 +93,14 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         findViewById<CheckBox>(R.id.checkboxKeys).setOnCheckedChangeListener { _, isChecked ->
             wantsKeys = isChecked
         }
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         account?.close()
     }
+
 
     private fun openTab(url: String) {
         val customTabsIntent = CustomTabsIntent.Builder()
