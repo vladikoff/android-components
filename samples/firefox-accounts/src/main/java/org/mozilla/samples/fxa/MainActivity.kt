@@ -47,7 +47,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                     val acct = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
                     account = acct
 
-                    var qrresult = "https://accounts.firefox.com/pair#channel_id=658db7fe98b249a5897b884f98fb31b7&channel_key=1hIDzTj5oY2HDeSg_jA2DhcOcAn5Uqq0cAYlZRNUIo4"
+                    var qrresult = ""
                     try {
                         qrresult = getIntent().getExtras().getString("qrresult")
                     } catch (e: Exception) {
@@ -56,9 +56,13 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
                     if (qrresult != "") {
                         val pairingUrl = qrresult;
-                        account?.beginPairingFlow(pairingUrl, scopes)?.whenComplete {
+                        account?.beginPairingFlow(pairingUrl, scopes)?.then({
                             openWebView(it)
-                        }
+                            FxaResult.fromValue(it)
+                        }, {
+                            Log.i("qrfail", "failed")
+                            FxaResult.fromException(it)
+                        })
                     }
 
                     acct.getProfile()
