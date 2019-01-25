@@ -28,6 +28,7 @@ object Versions {
 
     const val sentry = "1.7.14"
     const val okhttp = "3.12.1"
+    const val zxing = "3.3.0"
 
     const val mozilla_fxa = "0.13.3"
     const val mozilla_sync_logins = "0.13.3"
@@ -78,4 +79,5 @@ object Dependencies {
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
+    const val thirdparty_zxing = "com.google.zxing:core:${Versions.zxing}"
 }
