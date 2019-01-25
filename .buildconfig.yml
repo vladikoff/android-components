@@ -220,6 +220,10 @@ projects:
     path: components/lib/crash
     description: 'A generic crash reporter library that can report crashes to multiple services.'
     publish: true
+  lib-qr:
+    path: components/lib/qr
+    description: 'A QR thing.'
+    publish: true
   lib-dataprotect:
     path: components/lib/dataprotect
     description: 'A component using AndroidKeyStore to protect user data.'
@@ -255,6 +259,10 @@ projects:
   samples-crash:
     path: samples/crash
     description: 'An app showing the integration of the lib-crash component.'
+    publish: false
+  samples-qr:
+    path: samples/qr
+    description: 'An app showing the integration of the lib-qr component.'
     publish: false
   samples-firefox-accounts:
     path: samples/firefox-accounts
