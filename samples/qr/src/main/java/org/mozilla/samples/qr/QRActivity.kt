@@ -15,9 +15,9 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Toast
-import eu.livotov.labs.android.camview.ScannerLiveView
-import eu.livotov.labs.android.camview.camera.CameraController
-import eu.livotov.labs.android.camview.scanner.decoder.zxing.ZXDecoder
+import mozilla.components.lib.qr.ScannerLiveView
+import mozilla.components.lib.qr.camera.CameraController
+import mozilla.components.lib.qr.scanner.decoder.zxing.ZXDecoder
 import kotlinx.android.synthetic.main.activity_qr.*
 //import mozilla.components.lib.qr.QR
 
