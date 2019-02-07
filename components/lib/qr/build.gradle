@@ -33,7 +33,7 @@ dependencies {
 
     implementation project(':support-base')
 
-    compileOnly Dependencies.thirdparty_zxing
+    implementation Dependencies.thirdparty_zxing
     testImplementation Dependencies.thirdparty_zxing
 
     testImplementation project(':support-test')
