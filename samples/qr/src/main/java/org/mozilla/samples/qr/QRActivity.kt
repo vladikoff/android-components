@@ -14,59 +14,54 @@ import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.Toast
+import eu.livotov.labs.android.camview.ScannerLiveView
+import eu.livotov.labs.android.camview.camera.CameraController
+import eu.livotov.labs.android.camview.scanner.decoder.zxing.ZXDecoder
 import kotlinx.android.synthetic.main.activity_qr.*
 //import mozilla.components.lib.qr.QR
 
-class QRActivity : AppCompatActivity(), View.OnClickListener {
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-        }
-    }
+class QRActivity : AppCompatActivity() {
+
+    lateinit var camera: ScannerLiveView
+    lateinit var controller: CameraController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_qr)
 
-        fatalQRButton.setOnClickListener(this)
-        qrButton.setOnClickListener(this)
+        camera = findViewById<View>(R.id.camview) as ScannerLiveView
+
+        camera.setScannerViewEventListener(object : ScannerLiveView.ScannerViewEventListener {
+            override fun onScannerStarted(scanner: ScannerLiveView) {
+                Toast.makeText(this@QRActivity, "Scanner Started", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onScannerStopped(scanner: ScannerLiveView) {
+                Toast.makeText(this@QRActivity, "Scanner Stopped", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onScannerError(err: Throwable) {
+                Toast.makeText(this@QRActivity, "Scanner Error: " + err.message, Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onCodeScanned(data: String) {
+                Toast.makeText(this@QRActivity, data, Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     override fun onResume() {
         super.onResume()
+        val decoder = ZXDecoder()
+        decoder.scanAreaPercent = 0.5
+        camera.decoder = decoder
+        camera.startScanner()
     }
 
     override fun onPause() {
+        camera.stopScanner()
         super.onPause()
-
-        unregisterReceiver(receiver)
-    }
-
-    @Suppress("TooGenericExceptionThrown")
-    override fun onClick(view: View) {
-        when (view) {
-            fatalQRButton -> throw RuntimeException("Boom!")
-
-            qrButton -> {
-                // Pretend GeckoView has qred by re-building a qr Intent and launching the QRHandlerService.
-                val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
-                intent.component = ComponentName(
-                    packageName,
-                    "mozilla.components.lib.qr.handler.QRHandlerService"
-                )
-                intent.putExtra(
-                    "minidumpPath",
-                    "${filesDir.path}/mozilla/QR Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
-                )
-                intent.putExtra("fatal", false)
-                intent.putExtra(
-                    "extrasPath",
-                    "${filesDir.path}/mozilla/QR Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
-                )
-                intent.putExtra("minidumpSuccess", true)
-
-                ContextCompat.startForegroundService(this, intent)
-            }
-        }
     }
 }

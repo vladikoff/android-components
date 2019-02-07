@@ -1,19 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/qrButton"
+    <eu.livotov.labs.android.camview.ScannerLiveView
+        android:id="@+id/camview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/qr_nonfatal" />
+        android:layout_height="match_parent" />
 
-    <Button
-        android:id="@+id/fatalQRButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/qr_fatal"/>
-
-</LinearLayout>
+</FrameLayout>
