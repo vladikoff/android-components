@@ -3,5 +3,11 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="mozilla.components.lib.qr">
-    <application></application>
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <application>
+        <activity android:name=".CameraActivity"></activity>
+
+    </application>
 </manifest>

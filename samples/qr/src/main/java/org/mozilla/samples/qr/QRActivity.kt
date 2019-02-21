@@ -18,7 +18,6 @@ import android.widget.Toast
 //import mozilla.components.lib.qr.ScannerLiveView
 //import mozilla.components.lib.qr.camera.CameraController
 //import mozilla.components.lib.qr.scanner.decoder.zxing.ZXDecoder
-import kotlinx.android.synthetic.main.activity_qr.*
 import mozilla.components.lib.qr.CameraActivity
 
 //import mozilla.components.lib.qr.QR
@@ -31,7 +30,6 @@ class QRActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_qr)
 
         val intent = CameraActivity.newIntent(this)
         startActivity(intent)

@@ -919,109 +919,8 @@ public class Camera2BasicFragment extends Fragment
                     image.close();
                 }
             }
-            /*if (decodeState == STATE_FIND_QRCODE) {
-                decodeState = STATE_DECODE_PROGRESS;
-
-                image = reader.acquireNextImage();
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                data = new byte[buffer.remaining()];
-                buffer.get(data);
-                int width = image.getWidth();
-                int height = image.getHeight();
-                Log.d(TAG, "availableImageSize(" + width + "x" + height + ")");
-
-                image.close();
-            } else {
-
-
-            }
-
-            if (mState == STATE_PREVIEW && mQrState == STATE_FIND_QRCODE) {
-                *//*try {
-                    PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false);
-                    BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-                    Log.d(TAG, "convertedBitmapSize(" + bitmap.getWidth() + "x" + bitmap.getHeight() + ")");
-
-                    ImageAsyncTask imageAsyncTask = new ImageAsyncTask();
-                    mQrState = STATE_DECODE_PROGRESS;
-                    imageAsyncTask.execute(bitmap);
-
-                    image.close();
-
-                    if (mCaptureSession != null) {
-                        mCaptureSession.capture(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
-                    }
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                } catch (OutOfMemoryError e) {
-                    e.printStackTrace();
-                }*//*
-            } else if(mState == STATE_PREVIEW && mQrState == STATE_DECODE_PROGRESS) {
-                image.close();
-                Log.d(TAG, "onImageAvailable(STATE_DECODE_PROGRESS)");
-                try {
-                    if (mCaptureSession != null) {
-                        mCaptureSession.capture(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
-                    }
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                }
-            } else if( mState == STATE_WAITING_LOCK) {
-                mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
-            }*/
         }
     };
-    /*private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
-            = new ImageReader.OnImageAvailableListener() {
-
-        @Override
-        public synchronized void onImageAvailable(ImageReader reader) {
-            Log.d(TAG, "onImageAvailable("+(count++)+")");
-            Log.d(TAG, "onImageAvailable(mState="+mState+", mQrState="+mQrState+")");
-
-            Image image = reader.acquireNextImage();
-            if (mState == STATE_PREVIEW && mQrState == STATE_FIND_QRCODE) {
-                try {
-
-                    ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                    data = new byte[buffer.remaining()];
-                    buffer.get(data);
-                    int width = image.getWidth();
-                    int height = image.getHeight();
-                    Log.d(TAG, "availableImageSize(" + width + "x" + height + ")");
-                    PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false);
-                    BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-                    Log.d(TAG, "convertedBitmapSize(" + bitmap.getWidth() + "x" + bitmap.getHeight() + ")");
-
-                    ImageAsyncTask imageAsyncTask = new ImageAsyncTask();
-                    mQrState = STATE_DECODE_PROGRESS;
-                    imageAsyncTask.execute(bitmap);
-
-                    image.close();
-
-                    if (mCaptureSession != null) {
-                        mCaptureSession.capture(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
-                    }
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                } catch (OutOfMemoryError e) {
-                    e.printStackTrace();
-                }
-            } else if(mState == STATE_PREVIEW && mQrState == STATE_DECODE_PROGRESS) {
-                image.close();
-                Log.d(TAG, "onImageAvailable(STATE_DECODE_PROGRESS)");
-                try {
-                    if (mCaptureSession != null) {
-                        mCaptureSession.capture(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
-                    }
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                }
-            } else if( mState == STATE_WAITING_LOCK) {
-                mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
-            }
-        }
-    };*/
 
     public class ImageAsyncTask extends AsyncTask<BinaryBitmap, Void, Void> {
 
@@ -1048,8 +947,8 @@ public class Camera2BasicFragment extends Fragment
 
             try {
                 Log.d(TAG, image.getWidth()/4+","+image.getHeight()/4+","+image.getWidth()/2+","+image.getHeight()/2);
-                //image = image.crop(image.getWidth()/4,image.getHeight()/4,image.getWidth()/2,image.getHeight()/2);
-                image = image.crop(478, 286, 963, 506);
+                image = image.crop(image.getWidth()/4,image.getHeight()/4,image.getWidth()/2,image.getHeight()/2);
+                //image = image.crop(478, 286, 963, 506);
                 Log.d("ImageAsyncTask","doInBackground.decode BinaryBitmap("+image.getWidth()+"x"+image.getHeight()+")");
                 rawResult = multiFormatReader.decodeWithState(image);
                 Log.d("ImageAsyncTask","doInBackground.decode complete");
@@ -1218,9 +1117,9 @@ public class Camera2BasicFragment extends Fragment
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            FragmentCompat.requestPermissions(parent,
-                                    new String[]{Manifest.permission.CAMERA},
-                                    REQUEST_CAMERA_PERMISSION);
+//                            FragmentCompat.requestPermissions(parent,
+//                                    new String[]{Manifest.permission.CAMERA},
+//                                    REQUEST_CAMERA_PERMISSION);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel,
