@@ -5,14 +5,6 @@
 package org.mozilla.samples.qr
 
 import android.app.Application
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.widget.Toast
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-
 class QRApplication : Application() {
     override fun onCreate() {
         super.onCreate()
