@@ -809,10 +809,6 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    fun imageAlert(bitmap: Bitmap) {
-        ImageDialog(bitmap).show(childFragmentManager, FRAGMENT_DIALOG)
-    }
-
     @SuppressLint("ValidFragment")
     class ImageDialog(private val mBitmap: Bitmap?) : DialogFragment() {
         override fun onCreateDialog(savedInstanceState: Bundle): Dialog {
