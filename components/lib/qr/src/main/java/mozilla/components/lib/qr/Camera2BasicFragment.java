@@ -606,7 +606,6 @@ public class Camera2BasicFragment extends Fragment
                     Log.d(TAG, "afState:"+afState+" | "+ CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED+" | "+ CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED);
                     if (afState == null) {
                         callbackHandler.pictureCallback();
-                        //captureStillPicture();
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
                             CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
                         // CONTROL_AE_STATE can be null on some devices
@@ -617,7 +616,6 @@ public class Camera2BasicFragment extends Fragment
                             mState = STATE_PICTURE_TAKEN;
                             Log.d(TAG, "mState = STATE_PICTURE_TAKEN = "+STATE_PICTURE_TAKEN);
                             callbackHandler.pictureCallback();
-                            //captureStillPicture();
                         } else {
                             Log.d(TAG, "runPrecaptureSequence()");
                             runPrecaptureSequence();
@@ -634,17 +632,6 @@ public class Camera2BasicFragment extends Fragment
                             aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
                             aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) {
                         mState = STATE_WAITING_NON_PRECAPTURE;
-                    }
-                    break;
-                }
-                case STATE_WAITING_NON_PRECAPTURE: {
-                    Log.d(TAG, "STATE_WAITING_NON_PRECAPTURE");
-                    // CONTROL_AE_STATE can be null on some devices
-                    Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                    Log.d(TAG, "aeState:"+aeState);
-                    if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
-                        mState = STATE_PICTURE_TAKEN;
-                        captureStillPicture();
                     }
                     break;
                 }
@@ -778,51 +765,6 @@ public class Camera2BasicFragment extends Fragment
     }
 
     /**
-     * Capture a still picture. This method should be called when we get a response in
-     * {@link #mCaptureCallback} from both {@link #lockFocus()}.
-     */
-    private void captureStillPicture() {
-        Log.d(TAG, "captureStillPicture("+mState+")");
-        try {
-            final Activity activity = getActivity();
-            if (null == activity || null == mCameraDevice) {
-                return;
-            }
-            // This is the CaptureRequest.Builder that we use to take a picture.
-            final CaptureRequest.Builder captureBuilder =
-                    mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(mImageReader.getSurface());
-
-            // Use the same AE and AF modes as the preview.
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            //setAutoFlash(captureBuilder);
-
-            // Orientation
-            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
-
-            CameraCaptureSession.CaptureCallback CaptureCallback
-                    = new CameraCaptureSession.CaptureCallback() {
-
-                @Override
-                public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                               @NonNull CaptureRequest request,
-                                               @NonNull TotalCaptureResult result) {
-                    Log.d(TAG, "result.getFrameNumber() : "+result.getFrameNumber());
-                    //showToast("Saved: " + mFile);
-                    unlockFocus();
-                }
-            };
-
-            mCaptureSession.stopRepeating();
-            mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Retrieves the JPEG orientation from the specified screen rotation.
      *
      * @param rotation The screen rotation.
@@ -846,7 +788,6 @@ public class Camera2BasicFragment extends Fragment
             // Reset the auto-focus trigger
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            //setAutoFlash(mPreviewRequestBuilder);
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
 
@@ -856,13 +797,6 @@ public class Camera2BasicFragment extends Fragment
                     mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
-        if (mFlashSupported) {
-            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
         }
     }
 
@@ -976,54 +910,6 @@ public class Camera2BasicFragment extends Fragment
         }
     }
 
-    private class ImageSaver implements Runnable {
-
-        private final Image mImage;
-        private final File mFile;
-
-        public ImageSaver(Image image, File file) {
-            mImage = image;
-            mFile = file;
-            //unlockFocus();
-        }
-
-        @Override
-        public void run() {
-
-            ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
-            final byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            FileOutputStream output = null;
-
-            try {
-                if(mState == STATE_WAITING_LOCK) {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-                    if(bitmap == null){
-                        Log.d(TAG, "bImage is null");
-                    } else {
-                        Log.d(TAG, "Image ready");
-                        imageAlert(bitmap);
-                    }
-                    output = new FileOutputStream(mFile);
-                    output.write(bytes);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                mImage.close();
-
-                if (null != output) {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
     public void imageAlert(Bitmap bitmap) {
         new ImageDialog(bitmap).show(getChildFragmentManager(), FRAGMENT_DIALOG);
     }
@@ -1103,38 +989,6 @@ public class Camera2BasicFragment extends Fragment
 
     }
 
-    /**
-     * Shows OK/Cancel confirmation dialog about camera permission.
-     */
-    public static class ConfirmationDialog extends DialogFragment {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Fragment parent = getParentFragment();
-            return new AlertDialog.Builder(getActivity())
-                    .setMessage(R.string.request_permission)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-//                            FragmentCompat.requestPermissions(parent,
-//                                    new String[]{Manifest.permission.CAMERA},
-//                                    REQUEST_CAMERA_PERMISSION);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Activity activity = parent.getActivity();
-                                    if (activity != null) {
-                                        activity.finish();
-                                    }
-                                }
-                            })
-                    .create();
-        }
-    }
-
     private CallbackHandler callbackHandler = new CallbackHandler() {
         @Override
         public void pictureCallback() {
@@ -1152,7 +1006,6 @@ public class Camera2BasicFragment extends Fragment
                 // Use the same AE and AF modes as the preview.
                 captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                //setAutoFlash(captureBuilder);
 
                 // Orientation
                 int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -1176,22 +1029,6 @@ public class Camera2BasicFragment extends Fragment
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
-        }
-
-        @Override
-        public void scanCallback() {
-            Log.d(TAG, TAG+".CallbackHandler.scanCallback()");
-
-        }
-
-        @Override
-        public void cropPictureCallback() {
-
-        }
-
-        @Override
-        public void cropScanCallback() {
-
         }
     };
 
