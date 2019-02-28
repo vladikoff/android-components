@@ -32,6 +32,19 @@
             android:layout_height="wrap_content"
             android:text="@string/sync_history" />
 
+            <EditText
+                android:id="@+id/fennecBlob"
+                android:focusableInTouchMode="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Fennec JSON BLOB from adb shell run-as org.mozilla.fennec_$USER cat files/fxa.account.json"
+                />
+        <Button
+            android:id="@+id/buttonFennecMigration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/migrate_me" />
+
         <Button
             android:id="@+id/buttonLogout"
             android:layout_width="wrap_content"
