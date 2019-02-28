@@ -127,6 +127,12 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
     }
 
     /**
+     * Migrates the thing
+     */
+    override fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
+        return scope.async { inner.migrateFromSessionToken(sessionToken, kSync, kXCS) }
+    }
+    /**
      * Authenticates the current account using the code and state parameters fetched from the
      * redirect URL reached after completing the sign in flow triggered by [beginOAuthFlow].
      *
