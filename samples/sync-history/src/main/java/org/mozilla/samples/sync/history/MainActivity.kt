@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.historySyncStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,9 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
+import android.widget.EditText
+import org.json.JSONObject
+
 
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
 
@@ -38,7 +42,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private val accountManager by lazy {
         FxaAccountManager(
             this,
-            Config.release(CLIENT_ID, REDIRECT_URL),
+            Config("https://fenixmigrator.dev.lcip.org", CLIENT_ID, REDIRECT_URL),
             arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
         )
     }
@@ -61,7 +65,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
     companion object {
         const val CLIENT_ID = "3c49430b43dfba77"
-        const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
+        const val REDIRECT_URL = "https://fenixmigrator.dev.lcip.org/oauth/success/$CLIENT_ID"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +90,40 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
             launch { accountManager.logout().await() }
+        }
+
+        findViewById<View>(R.id.buttonFennecMigration).setOnClickListener {
+            launch {
+                val editText = findViewById<View>(R.id.fennecBlob) as EditText
+                val content = editText.getText().toString()
+                val fennecBlob = JSONObject(content)
+                val bundle = fennecBlob.getJSONObject("bundle")
+                val state = bundle.getString("state")
+                val stateJson = JSONObject(state)
+                try {
+                    accountManager.migrateFromSessionToken(stateJson.getString("sessionToken"),
+                            stateJson.getString("kSync"),
+                            stateJson.getString("kXCS")).await()
+                } catch (error: FxaException) {
+                    val text = "Migration has failed"
+
+                    val duration = Toast.LENGTH_LONG
+
+                    val toast = Toast.makeText(applicationContext, text, duration)
+                    toast.show()
+
+                    val txtView: TextView = findViewById(R.id.fxaStatusView)
+                    txtView.text = getString(R.string.account_error, error.toString())
+                    return@launch
+                }
+
+                val text = "You have been migrated."
+
+                val duration = Toast.LENGTH_LONG
+
+                val toast = Toast.makeText(applicationContext, text, duration)
+                toast.show()
+            }
         }
 
         // NB: ObserverRegistry takes care of unregistering this observer when appropriate, and
@@ -114,7 +152,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                     txtView.text = getString(R.string.sync_error, historySyncStatus.exception)
                 } else {
                     val visitedCount = historyStorage.getVisited().size
-                    // visitedCount is passed twice: to get the correct plural form, and then as
+                    // visit Count is passed twice: to get the correct plural form, and then as
                     // an argument for string formatting.
                     txtView.text = resources.getQuantityString(
                         R.plurals.visited_url_count, visitedCount, visitedCount

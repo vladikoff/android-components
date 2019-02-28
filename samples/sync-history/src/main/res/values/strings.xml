@@ -19,4 +19,5 @@
     <string name="log_out">FxA Log Out</string>
     <string name="logged_out">Logged out!</string>
     <string name="sync_history">Sync history</string>
+    <string name="migrate_me">Migrate me!</string>
 </resources>
