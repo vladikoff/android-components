@@ -31,7 +31,7 @@ import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 import android.widget.EditText
-
+import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
@@ -96,7 +96,29 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
             launch {
                 val editText = findViewById<View>(R.id.fennecBlob) as EditText
                 val content = editText.getText().toString()
-                val text = "Migration has failed"
+                val fennecBlob = JSONObject(content)
+                val bundle = fennecBlob.getJSONObject("bundle")
+                val state = bundle.getString("state")
+                val stateJson = JSONObject(state)
+                try {
+                    accountManager.migrateFromSessionToken(stateJson.getString("sessionToken"),
+                            stateJson.getString("kSync"),
+                            stateJson.getString("kXCS")).await()
+                } catch (error: FxaException) {
+                    val text = "Migration has failed"
+
+                    val duration = Toast.LENGTH_LONG
+
+                    val toast = Toast.makeText(applicationContext, text, duration)
+                    toast.show()
+
+                    val txtView: TextView = findViewById(R.id.fxaStatusView)
+                    txtView.text = getString(R.string.account_error, error.toString())
+                    return@launch
+                }
+
+                val text = "You have been migrated."
+
                 val duration = Toast.LENGTH_LONG
 
                 val toast = Toast.makeText(applicationContext, text, duration)
@@ -130,7 +152,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                     txtView.text = getString(R.string.sync_error, historySyncStatus.exception)
                 } else {
                     val visitedCount = historyStorage.getVisited().size
-                    // visitedCount is passed twice: to get the correct plural form, and then as
+                    // visit Count is passed twice: to get the correct plural form, and then as
                     // an argument for string formatting.
                     txtView.text = resources.getQuantityString(
                         R.plurals.visited_url_count, visitedCount, visitedCount

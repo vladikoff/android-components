@@ -42,7 +42,15 @@ internal sealed class Event {
 
     object AccountNotFound : Event()
     object AccountRestored : Event()
-
+    // sessionToken: String, kSync: String, kXCS: String
+    data class Migrate(val sessionToken: String, val kSync: String, val kXCS: String): Event() {
+        override fun toString(): String {
+            // data classes define their own toString, so we override it here as well as in the base
+            // class to avoid exposing 'code' and 'state' in logs.
+            return this.javaClass.simpleName
+        }
+    }
+    object Migrated : Event()
     object Authenticate : Event()
     data class Authenticated(val code: String, val state: String) : Event() {
         override fun toString(): String {
@@ -149,6 +157,7 @@ open class FxaAccountManager(
                 AccountState.Start -> {
                     when (event) {
                         Event.Init -> AccountState.Start
+                        is Event.Migrate -> AccountState.NotAuthenticated
                         Event.AccountNotFound -> AccountState.NotAuthenticated
                         Event.AccountRestored -> AccountState.AuthenticatedNoProfile
                         else -> null
@@ -157,13 +166,16 @@ open class FxaAccountManager(
                 AccountState.NotAuthenticated -> {
                     when (event) {
                         Event.Authenticate -> AccountState.NotAuthenticated
+                        is Event.Migrate -> AccountState.NotAuthenticated
                         Event.FailedToAuthenticate -> AccountState.NotAuthenticated
                         is Event.Authenticated -> AccountState.AuthenticatedNoProfile
+                        Event.Migrated -> AccountState.AuthenticatedNoProfile
                         else -> null
                     }
                 }
                 AccountState.AuthenticatedNoProfile -> {
                     when (event) {
+                        Event.Migrated -> AccountState.AuthenticatedNoProfile
                         Event.FetchProfile -> AccountState.AuthenticatedNoProfile
                         Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
                         Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
@@ -241,6 +253,10 @@ open class FxaAccountManager(
         processQueue(Event.Authenticate)
 
         return deferredAuthUrl
+    }
+
+    fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
+        return processQueue(Event.Migrate(sessionToken, kSync, kXCS))
     }
 
     fun finishAuthentication(code: String, state: String): Deferred<Unit> {
@@ -334,6 +350,30 @@ open class FxaAccountManager(
             }
             AccountState.NotAuthenticated -> {
                 when (via) {
+                    is Event.Migrate -> {
+                        // Clean up resources.
+                        profile = null
+                        account.close()
+                        // Delete persisted state.
+                        accountStorage.clear()
+
+                        account = createAccount(config)
+                        try {
+                            account.migrateFromSessionToken(via.sessionToken, via.kSync, via.kXCS).await()
+                        } catch (e: FxaException) {
+                            oauth.notifyObservers {
+                                onError(e)
+                            }
+
+                            return Event.FailedToAuthenticate
+                        }
+
+                        accountStorage.write(account)
+
+                        notifyObservers { onAuthenticated(account) }
+
+                        Event.Migrated
+                    }
                     Event.Logout -> {
                         // Clean up resources.
                         profile = null
@@ -369,6 +409,9 @@ open class FxaAccountManager(
             }
             AccountState.AuthenticatedNoProfile -> {
                 when (via) {
+                    Event.Migrated -> {
+                        Event.FetchProfile
+                    }
                     is Event.Authenticated -> {
                         account.completeOAuthFlow(via.code, via.state).await()
                         accountStorage.write(account)

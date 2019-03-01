@@ -10,8 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
-import org.mozilla.fxaclient.internal.FirefoxAccount as InternalFxAcct
-import org.mozilla.fxaclient.internal.FxaException.Unauthorized as Unauthorized
+import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
+import mozilla.appservices.fxaclient.FxaException.Unauthorized as Unauthorized
+
+typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
 
 /**
  * Facilitates testing consumers of FirefoxAccount.
@@ -21,6 +23,7 @@ interface FirefoxAccountShaped : AutoCloseable {
     fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String>
     fun getProfile(ignoreCache: Boolean): Deferred<Profile>
     fun getProfile(): Deferred<Profile>
+    fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit>
     fun completeOAuthFlow(code: String, state: String): Deferred<Unit>
     fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo>
     fun getTokenServerEndpointURL(): String
@@ -30,6 +33,7 @@ interface FirefoxAccountShaped : AutoCloseable {
 /**
  * FirefoxAccount represents the authentication state of a client.
  */
+@Suppress("TooManyFunctions")
 class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : FirefoxAccountShaped {
 
     private val job = SupervisorJob()
@@ -38,15 +42,43 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
     /**
      * Construct a FirefoxAccount from a [Config], a clientId, and a redirectUri.
      *
+     * @param persistCallback This callback will be called every time the [FirefoxAccount]
+     * internal state has mutated.
+     * The FirefoxAccount instance can be later restored using the
+     * [FirefoxAccount.fromJSONString]` class method.
+     * It is the responsibility of the consumer to ensure the persisted data
+     * is saved in a secure location, as it can contain Sync Keys and
+     * OAuth tokens.
+     *
      * Note that it is not necessary to `close` the Config if this constructor is used (however
      * doing so will not cause an error).
      */
-    constructor(config: Config)
-            : this(InternalFxAcct(config))
+    constructor(config: Config, persistCallback: PersistCallback? = null)
+            : this(InternalFxAcct(config, persistCallback))
 
     override fun close() {
         job.cancel()
         inner.close()
+    }
+
+    /**
+     * Registers a [PersistCallback] that will be called every time the
+     * [FirefoxAccount] internal state has mutated.
+     * The [FirefoxAccount] instance can be later restored using the
+     * [FirefoxAccount.fromJSONString] class method.
+     * It is the responsibility of the consumer to ensure the persisted data
+     * is saved in a secure location, as it can contain Sync Keys and
+     * OAuth tokens.
+     */
+    fun registerPersistCallback(persistCallback: PersistCallback) {
+        inner.registerPersistCallback(persistCallback)
+    }
+
+    /**
+     * Unregisters any previously registered [PersistCallback].
+     */
+    fun unregisterPersistCallback() {
+        inner.unregisterPersistCallback()
     }
 
     /**
@@ -104,6 +136,12 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
     }
 
     /**
+     * Migrates the thing
+     */
+    override fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
+        return scope.async { inner.migrateFromSessionToken(sessionToken, kSync, kXCS) }
+    }
+    /**
      * Authenticates the current account using the code and state parameters fetched from the
      * redirect URL reached after completing the sign in flow triggered by [beginOAuthFlow].
      *
@@ -124,7 +162,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
      */
     override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
         return scope.async {
-            inner.getAccessToken(singleScope).let { AccessTokenInfo.fromInternal(it) }
+            inner.getAccessToken(singleScope)
         }
     }
 
@@ -142,10 +180,18 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
          * Restores the account's authentication state from a JSON string produced by
          * [FirefoxAccount.toJSONString].
          *
+         * @param persistCallback This callback will be called every time the [FirefoxAccount]
+         * internal state has mutated.
+         * The FirefoxAccount instance can be later restored using the
+         * [FirefoxAccount.fromJSONString]` class method.
+         * It is the responsibility of the consumer to ensure the persisted data
+         * is saved in a secure location, as it can contain Sync Keys and
+         * OAuth tokens.
+         *
          * @return [FirefoxAccount] representing the authentication state
          */
-        fun fromJSONString(json: String): FirefoxAccount {
-            return FirefoxAccount(InternalFxAcct.fromJSONString(json))
+        fun fromJSONString(json: String, persistCallback: PersistCallback? = null): FirefoxAccount {
+            return FirefoxAccount(InternalFxAcct.fromJSONString(json, persistCallback))
         }
     }
 }
