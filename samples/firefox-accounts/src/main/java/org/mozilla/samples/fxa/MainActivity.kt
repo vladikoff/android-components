@@ -21,6 +21,7 @@ import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.Profile
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import kotlin.coroutines.CoroutineContext
 
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
@@ -30,6 +31,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private var scopesWithKeys: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
     private var scopes: Array<String> = scopesWithoutKeys
     private var wantsKeys: Boolean = false
+
+    private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
@@ -65,8 +68,9 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
 
         findViewById<View>(R.id.buttonPair).setOnClickListener {
-            val intent = Intent(this@MainActivity, ScanActivity::class.java)
-            startActivity(intent)
+            qrFeature.scan();
+            //val intent = Intent(this@MainActivity, ScanActivity::class.java)
+            //startActivity(intent)
         }
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
@@ -79,6 +83,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             wantsKeys = isChecked
             scopes = if (isChecked) scopesWithKeys else scopesWithoutKeys
         }
+
+
     }
 
     private fun initAccount(): FirefoxAccount {
