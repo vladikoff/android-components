@@ -4,6 +4,7 @@
 
 package org.mozilla.samples.fxa
 
+import android.Manifest.permission.CAMERA
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
@@ -32,7 +33,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private var scopes: Array<String> = scopesWithoutKeys
     private var wantsKeys: Boolean = false
 
-    private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
+    lateinit var qrFeature: QrFeature
 
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
@@ -68,7 +69,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
 
         findViewById<View>(R.id.buttonPair).setOnClickListener {
-            qrFeature.scan();
+            qrFeature.scan(); // This here replaces the fragment?
             //val intent = Intent(this@MainActivity, ScanActivity::class.java)
             //startActivity(intent)
         }
