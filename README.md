@@ -206,7 +206,7 @@ _Sample apps using various components._
 
 * [**Crash**](samples/crash) - An app showing the integration of the `lib-crash` component.
 
-* [**QR**](samples/qr) - An app showing the usage of the `lib-qr` component.
+* [**QR**](samples/qr) - An app showing the usage of the `feature-qr` component.
 
 * [**Firefox Accounts (FxA)**](samples/firefox-accounts) - A simple app demoing Firefox Accounts integration.
 

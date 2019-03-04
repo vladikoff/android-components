@@ -48,4 +48,5 @@ dependencies {
 
     implementation Dependencies.support_appcompat
     implementation Dependencies.support_customtabs
+    implementation project(path: ':feature-qr')
 }
