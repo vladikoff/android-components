@@ -64,7 +64,7 @@ internal object RustPlacesConnection : Connection {
 
     override fun sync(syncInfo: SyncAuthInfo) {
         check(api != null) { "must call init first" }
-        api!!.sync(syncInfo)
+        api!!.syncHistory(syncInfo)
     }
 
     override fun close() = synchronized(this) {

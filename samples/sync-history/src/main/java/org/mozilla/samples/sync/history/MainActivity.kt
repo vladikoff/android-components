@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private val accountManager by lazy {
         FxaAccountManager(
             this,
-            Config("https://fenixmigrator.dev.lcip.org", CLIENT_ID, REDIRECT_URL),
+            Config("https://latest.dev.lcip.org", CLIENT_ID, REDIRECT_URL),
             arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
             syncManager
         )
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
     companion object {
         const val CLIENT_ID = "3c49430b43dfba77"
-        const val REDIRECT_URL = "https://fenixmigrator.dev.lcip.org/oauth/success/$CLIENT_ID"
+        const val REDIRECT_URL = "https://latest.dev.lcip.org/oauth/success/$CLIENT_ID"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                 val state = bundle.getString("state")
                 val stateJson = JSONObject(state)
                 try {
-                    accountManager.migrateFromSessionToken(stateJson.getString("sessionToken"),
+                    accountManager.migrateFromSessionTokenAsync(stateJson.getString("sessionToken"),
                             stateJson.getString("kSync"),
                             stateJson.getString("kXCS")).await()
                 } catch (error: FxaException) {

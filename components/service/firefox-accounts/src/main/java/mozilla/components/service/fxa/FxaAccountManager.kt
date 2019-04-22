@@ -244,8 +244,8 @@ open class FxaAccountManager(
         return deferredAuthUrl
     }
 
-    fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
-        return processQueue(Event.Migrate(sessionToken, kSync, kXCS))
+    fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
+        return processQueueAsync(Event.Migrate(sessionToken, kSync, kXCS))
     }
 
     fun finishAuthenticationAsync(code: String, state: String): Deferred<Unit> {
@@ -344,20 +344,20 @@ open class FxaAccountManager(
                         profile = null
                         account.close()
                         // Delete persisted state.
-                        accountStorage.clear()
+                        getAccountStorage().clear()
 
                         account = createAccount(config)
                         try {
                             account.migrateFromSessionToken(via.sessionToken, via.kSync, via.kXCS).await()
                         } catch (e: FxaException) {
-                            oauth.notifyObservers {
+                            oauthObservers.notifyObservers {
                                 onError(e)
                             }
 
                             return Event.FailedToAuthenticate
                         }
 
-                        accountStorage.write(account)
+                        getAccountStorage().write(account)
 
                         notifyObservers { onAuthenticated(account) }
 

@@ -88,6 +88,13 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
     }
 
     /**
+     * Migrates the thing
+     */
+    override fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
+        return scope.async { inner.migrateFromSessionToken(sessionToken, kSync, kXCS) }
+    }
+
+    /**
      * Fetches the profile object for the current client either from the existing cached account,
      * or from the server (requires the client to have access to the profile scope).
      *
@@ -126,12 +133,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
         return inner.getConnectionSuccessURL()
     }
 
-    /**
-     * Migrates the thing
-     */
-    override fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit> {
-        return scope.async { inner.migrateFromSessionToken(sessionToken, kSync, kXCS) }
-    }
+
     /**
      * Authenticates the current account using the code and state parameters fetched from the
      * redirect URL reached after completing the sign in flow triggered by [beginOAuthFlow].

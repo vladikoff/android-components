@@ -20,6 +20,7 @@ class AuthException(type: AuthExceptionType) : java.lang.Exception(type.msg)
 interface OAuthAccount : AutoCloseable {
     fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String>
     fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String>
+    fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String): Deferred<Unit>
     fun getProfile(ignoreCache: Boolean): Deferred<Profile>
     fun getProfile(): Deferred<Profile>
     fun completeOAuthFlow(code: String, state: String): Deferred<Unit>

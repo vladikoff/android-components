@@ -37,6 +37,12 @@ class FirefoxAccountsAuthFeature(
         }
     }
 
+    fun migrateFromSessionToken(sessionToken: String, kSync: String, kXCS: String) {
+        CoroutineScope(coroutineContext).launch {
+            accountManager.migrateFromSessionTokenAsync(sessionToken, kSync, kXCS).await()
+        }
+    }
+
     private fun beginAuthenticationAsync(beginAuthentication: suspend () -> String) {
         CoroutineScope(coroutineContext).launch {
             val authUrl = try {
