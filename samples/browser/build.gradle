@@ -137,6 +137,7 @@ dependencies {
     implementation project(':feature-intent')
     implementation project(':feature-media')
     implementation project(':feature-readerview')
+    implementation project(':feature-fxawebchannel')
     implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':feature-toolbar')
