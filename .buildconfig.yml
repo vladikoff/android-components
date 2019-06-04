@@ -120,6 +120,10 @@ projects:
     path: components/feature/qr
     description: 'A feature that provides functionality for scanning QR codes.'
     publish: true
+  feature-fxawebchannel:
+    path: components/feature/fxawebchannel
+    description: 'A feature that provides FxA WebChannels (https://developer.mozilla.org/docs/Mozilla/JavaScript_code_modules/WebChannel.jsm) as a WebExtension.'
+    publish: true
   browser-awesomebar:
     path: components/browser/awesomebar
     description: 'A customizable awesomebar component for browsers.'
