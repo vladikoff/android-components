@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
+import org.json.JSONArray
 import java.util.WeakHashMap
 
 /**
@@ -81,6 +82,7 @@ class WebChannelFeature(
 
                 val messageId = messageObj.optString("messageId", "")
                 when (command) {
+                    COMMAND_STATUS -> sendStatus(messageId, engineSession)
                     COMMAND_CAN_LINK_ACCOUNT -> sendLinkResponse(messageId, engineSession)
                     COMMAND_OAUTH_LOGIN -> receiveLogin(messageObj)
                 }
@@ -108,6 +110,7 @@ class WebChannelFeature(
         // Constants for incoming messages from the WebExtension.
         // Possible messages: https://github.com/mozilla/fxa/blob/8701348cdd79dbdc9879b2b4a55a23a135a32bc1/packages/fxa-content-server/docs/relier-communication-protocols/fx-fxawebchannel.md
         internal const val CHANNEL_ID = "account_updates"
+        internal const val COMMAND_STATUS = "fxaccounts:status"
         internal const val COMMAND_CAN_LINK_ACCOUNT = "fxaccounts:can_link_account"
         internal const val COMMAND_OAUTH_LOGIN = "fxaccounts:oauth_login"
 
@@ -145,6 +148,29 @@ class WebChannelFeature(
             }
 
             installedWebExt?.let { registerContentMessageHandler(it) }
+        }
+
+        /**
+         * This message will be the response to FxA status when the page loads.
+         */
+        private fun sendStatus(messageId: String, engineSession: EngineSession) {
+            val statusData = JSONObject()
+            statusData.put("signedInUser", "testuser@testuser.com")
+            statusData.put("sessionToken", "ya")
+            statusData.put("uid", "uid")
+            statusData.put("verified", true)
+            statusData.put("capabilities", JSONObject().put("engines", JSONArray().put("creditcards")))
+
+            val statusMessage = JSONObject()
+            statusMessage.put("messageId", messageId)
+            statusMessage.put("command", COMMAND_STATUS)
+            statusMessage.put("data", statusData)
+
+            val status = JSONObject()
+            status.put("id", CHANNEL_ID)
+            status.put("message", statusMessage)
+
+            sendContentMessage(status, engineSession)
         }
 
         private fun sendLinkResponse(messageId: String, engineSession: EngineSession) {
